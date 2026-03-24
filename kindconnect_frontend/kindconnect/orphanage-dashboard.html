@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orphanage Dashboard - KindConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="navbar-brand">KindConnect</a>
+    <ul class="navbar-nav">
+      <li><a href="orphanage-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container section">
+
+    <div class="card profile-header theme-orphanage animate-up mb-4">
+      <div style="position:relative;z-index:2;">
+        <h1 style="margin-bottom:0;color:white;">🏠 <span id="orgName">Orphanage</span></h1>
+        <p style="color:rgba(255,255,255,0.8);margin-top:0.5rem;margin-bottom:0;">Manage donations and appointments</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-4 mb-4">
+      <div class="stat-card animate-up delay-1"><div class="stat-value" id="statDonations">0</div><div class="stat-label">Donations</div></div>
+      <div class="stat-card animate-up delay-2"><div class="stat-value" id="statAmount">₹0</div><div class="stat-label">Money Received</div></div>
+      <div class="stat-card animate-up delay-3"><div class="stat-value" id="statAppts">0</div><div class="stat-label">Appointments</div></div>
+      <div class="stat-card animate-up delay-4"><div class="stat-value" id="statPending">0</div><div class="stat-label">Pending</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="d-flex gap-2 mb-3 animate-up" style="border-bottom:2px solid var(--glass-border);padding-bottom:1rem;flex-wrap:wrap;">
+      <button class="btn btn-primary" id="tabDonations"    onclick="showTab('donations')">💝 Donations</button>
+      <button class="btn btn-outline" id="tabAppointments" onclick="showTab('appointments')">📅 Appointments</button>
+    </div>
+
+    <!-- Donations -->
+    <div id="sectionDonations">
+      <div class="d-flex gap-2 mb-3" style="flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="dfilterAll"       onclick="filterDonations('all')">All</button>
+        <button class="btn btn-outline btn-sm" id="dfilterPending"   onclick="filterDonations('pending')">⏳ Pending</button>
+        <button class="btn btn-outline btn-sm" id="dfilterConfirmed" onclick="filterDonations('confirmed')">✅ Confirmed</button>
+        <button class="btn btn-outline btn-sm" id="dfilterMoney"     onclick="filterDonations('money')">💰 Money</button>
+        <button class="btn btn-outline btn-sm" id="dfilterItems"     onclick="filterDonations('items')">📦 Items</button>
+      </div>
+      <div id="donationsContainer"></div>
+    </div>
+
+    <!-- Appointments -->
+    <div id="sectionAppointments" style="display:none;">
+      <div class="d-flex gap-2 mb-3" style="flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="afilterAll"      onclick="filterAppts('all')">All</button>
+        <button class="btn btn-outline btn-sm" id="afilterPending"  onclick="filterAppts('pending')">⏳ Pending</button>
+        <button class="btn btn-outline btn-sm" id="afilterApproved" onclick="filterAppts('approved')">✅ Approved</button>
+        <button class="btn btn-outline btn-sm" id="afilterRejected" onclick="filterAppts('rejected')">❌ Rejected</button>
+      </div>
+      <div id="appointmentsContainer"></div>
+    </div>
+
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (!requireAuth('index.html')) {}
+    if (getRole() !== 'orphanage') window.location.href = 'index.html';
+
+    let allDonations = [], allAppts = [];
+
+    async function loadDashboard() {
+      const user = getUser();
+      if (user) document.getElementById('orgName').textContent = user.name || 'Orphanage';
+
+      // Donations
+      try {
+        const d = await apiOrphanageDonations();
+        allDonations = d.donations || [];
+        const totalMoney = allDonations.filter(x=>x.donation_type==='money').reduce((s,x)=>s+(x.money_details?.amount||0),0);
+        const pending    = allDonations.filter(x=>x.status==='pending').length;
+        document.getElementById('statDonations').textContent = allDonations.length;
+        document.getElementById('statAmount').textContent    = formatAmount(totalMoney);
+        document.getElementById('statPending').textContent   = pending;
+        renderDonations('all');
+      } catch(e) {}
+
+      // Appointments
+      try {
+        const a = await apiOrphanageAppointments();
+        allAppts = a.appointments || [];
+        document.getElementById('statAppts').textContent = allAppts.length;
+        renderAppts('all');
+      } catch(e) {}
+    }
+
+    // ── Donations ─────────────────────────────────────────────────────────────
+    function renderDonations(f) {
+      let list = allDonations;
+      if (f==='pending')   list = list.filter(d=>d.status==='pending');
+      if (f==='confirmed') list = list.filter(d=>d.status==='confirmed');
+      if (f==='money')     list = list.filter(d=>d.donation_type==='money');
+      if (f==='items')     list = list.filter(d=>d.donation_type==='items');
+      const el = document.getElementById('donationsContainer');
+      if (!list.length) { el.innerHTML='<div class="card text-center"><p style="color:var(--text-muted);">No donations found.</p></div>'; return; }
+      el.innerHTML = `<div class="table-container"><table>
+        <thead><tr><th>Donor</th><th>Type</th><th>Detail</th><th>Message</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody>${list.map(d => {
+          const detail = d.donation_type==='money'
+            ? `${formatAmount(d.money_details?.amount)} via ${(d.money_details?.payment_method||'').replace('_',' ')}`
+            : (d.item_details?.items||[]).join(', ');
+          const donor = d.anonymous ? '<em style="color:var(--text-muted);">Anonymous</em>' : d.donor_name;
+          const statusClass = d.status==='confirmed'?'badge-approved':d.status==='cancelled'?'badge-rejected':'badge-pending';
+          const typeBadge = d.donation_type==='money'
+            ? `<span class="badge" style="background:rgba(21,101,192,.15);color:#1565C0;border:1px solid #1565C0;">💰</span>`
+            : `<span class="badge" style="background:rgba(106,27,154,.15);color:#6A1B9A;border:1px solid #6A1B9A;">📦</span>`;
+          return `<tr>
+            <td>${donor}<br><small style="color:var(--text-muted);">${d.anonymous?'':d.donor_email}</small></td>
+            <td>${typeBadge}</td><td>${detail}</td><td>${d.message||'—'}</td>
+            <td><span class="badge ${statusClass}">${d.status}</span></td>
+            <td>${formatDate(d.created_at)}</td>
+            <td><select class="form-control" style="padding:6px 8px;font-size:0.82rem;"
+              onchange="updateDonation('${d.id}',this.value)" ${d.status!=='pending'?'disabled':''}>
+              <option value="pending" ${d.status==='pending'?'selected':''}>Pending</option>
+              <option value="confirmed" ${d.status==='confirmed'?'selected':''}>Confirm</option>
+              <option value="cancelled" ${d.status==='cancelled'?'selected':''}>Cancel</option>
+            </select></td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+    }
+
+    async function updateDonation(id, status) {
+      try { await apiUpdateDonationStatus(id, status); await loadDashboard(); }
+      catch(e) { alert('Failed: '+e.message); }
+    }
+
+    function filterDonations(f) {
+      ['all','pending','confirmed','money','items'].forEach(k => {
+        const btn = document.getElementById('dfilter'+k.charAt(0).toUpperCase()+k.slice(1));
+        if (btn) btn.className = k===f ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      });
+      renderDonations(f);
+    }
+
+    // ── Appointments ──────────────────────────────────────────────────────────
+    function renderAppts(f) {
+      let list = allAppts;
+      if (f==='pending')  list = list.filter(a=>a.status==='pending');
+      if (f==='approved') list = list.filter(a=>a.status==='approved');
+      if (f==='rejected') list = list.filter(a=>a.status==='rejected');
+      const el = document.getElementById('appointmentsContainer');
+      if (!list.length) { el.innerHTML='<div class="card text-center"><p style="color:var(--text-muted);">No appointments found.</p></div>'; return; }
+      el.innerHTML = `<div class="table-container"><table>
+        <thead><tr><th>Donor</th><th>Date</th><th>Time</th><th>Purpose</th><th>Notes</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>${list.map(a => {
+          const statusClass = a.status==='approved'?'badge-approved':a.status==='rejected'?'badge-rejected':'badge-pending';
+          return `<tr>
+            <td>${a.user_name}<br><small style="color:var(--text-muted);">${a.user_email}</small></td>
+            <td>${a.appointment_date}</td><td>${a.appointment_time}</td>
+            <td>${a.purpose}</td><td>${a.notes||'—'}</td>
+            <td><span class="badge ${statusClass}">${a.status}</span></td>
+            <td style="display:flex;gap:6px;">
+              ${a.status==='pending' ? `
+                <button class="btn btn-success btn-sm" onclick="updateAppt('${a.id}','approved')">✅ Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="updateAppt('${a.id}','rejected')">❌ Reject</button>
+              ` : '—'}
+            </td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+    }
+
+    async function updateAppt(id, status) {
+      try { await apiUpdateAppointmentStatus(id, status); await loadDashboard(); }
+      catch(e) { alert('Failed: '+e.message); }
+    }
+
+    function filterAppts(f) {
+      ['all','pending','approved','rejected'].forEach(k => {
+        const btn = document.getElementById('afilter'+k.charAt(0).toUpperCase()+k.slice(1));
+        if (btn) btn.className = k===f ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      });
+      renderAppts(f);
+    }
+
+    function showTab(tab) {
+      ['donations','appointments'].forEach(t => {
+        document.getElementById('section'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?'block':'none';
+        const btn = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
+        if (btn) btn.className = t===tab ? 'btn btn-primary' : 'btn btn-outline';
+      });
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

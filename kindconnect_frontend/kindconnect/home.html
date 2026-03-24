@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KindConnect - Making a Difference Together</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .feedback-card {
+      background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-md);
+      padding:1.5rem;transition:all .25s;
+    }
+    .feedback-card:hover { transform:translateY(-2px);box-shadow:var(--shadow-md); }
+    .stars { color:#f59e0b;font-size:1.1rem;letter-spacing:2px;margin-bottom:0.5rem; }
+    .feedback-author { font-weight:600;color:var(--text-primary);margin-bottom:0.25rem; }
+    .feedback-org { font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem; }
+    .feedback-comment { color:var(--text-secondary);font-size:0.9rem;line-height:1.6;font-style:italic; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="home.html" class="navbar-brand">KindConnect</a>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="index.html" class="nav-link">Login</a></li>
+      <li><a href="register.html" class="nav-link btn btn-primary">Get Started</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero Slider -->
+  <section class="hero" id="heroSlider"
+    style="background-image:url('img/children.png');background-size:cover;background-position:center;position:relative;transition:background-image 0.8s ease-in-out;color:white;min-height:480px;display:flex;align-items:center;">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:0;"></div>
+    <div class="container" style="position:relative;z-index:1;">
+      <h1 class="hero-title" style="color:white;" id="heroTitle">Make a Difference Today</h1>
+      <p class="hero-subtitle" style="color:rgba(255,255,255,0.9);" id="heroSubtitle">
+        Connect with orphanages, donate money or items, and change lives in your community.
+      </p>
+      <div class="hero-cta">
+        <a href="register.html" class="btn btn-primary btn-lg">Join Now</a>
+        <a href="orphanages.html" class="btn btn-outline btn-lg" style="color:white;border-color:rgba(255,255,255,0.5);">Browse Orphanages</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Strip -->
+  <section style="background:var(--primary);padding:2rem 0;">
+    <div class="container">
+      <div class="grid grid-4">
+        <div style="text-align:center;color:white;">
+          <div style="font-size:2rem;font-weight:700;" id="statOrphanages">—</div>
+          <div style="font-size:0.85rem;opacity:0.8;margin-top:4px;">Orphanages</div>
+        </div>
+        <div style="text-align:center;color:white;">
+          <div style="font-size:2rem;font-weight:700;" id="statDonations">—</div>
+          <div style="font-size:0.85rem;opacity:0.8;margin-top:4px;">Donations Made</div>
+        </div>
+        <div style="text-align:center;color:white;">
+          <div style="font-size:2rem;font-weight:700;" id="statAmount">—</div>
+          <div style="font-size:0.85rem;opacity:0.8;margin-top:4px;">Amount Raised</div>
+        </div>
+        <div style="text-align:center;color:white;">
+          <div style="font-size:2rem;font-weight:700;" id="statFeedback">—</div>
+          <div style="font-size:0.85rem;opacity:0.8;margin-top:4px;">Happy Donors</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section">
+    <div class="container">
+      <h2 class="text-center mb-4">Why Choose KindConnect?</h2>
+      <div class="grid grid-4">
+        <div class="card">
+          <h3 class="card-title">🏠 Find Orphanages</h3>
+          <p class="card-text">Browse verified orphanages and choose a cause that resonates with your heart.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">💰 Donate Money</h3>
+          <p class="card-text">Send funds via UPI, bank transfer, cash or card — every rupee reaches the children.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">📦 Donate Items</h3>
+          <p class="card-text">Give clothes, food, books, toys and more. Schedule pickups or drop-offs easily.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">📅 Book Visits</h3>
+          <p class="card-text">Schedule personal visits to orphanages. Spend time with children who need you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Orphanages -->
+  <section class="section" style="background:rgba(220,38,38,0.04);padding-top:1rem;">
+    <div class="container">
+      <h2 class="text-center mb-4">Orphanages Waiting for Help</h2>
+      <div class="grid grid-3" id="featuredOrphanages">
+        <div class="card text-center"><p style="color:var(--text-muted);">Loading...</p></div>
+      </div>
+      <div class="text-center mt-4">
+        <a href="orphanages.html" class="btn btn-outline btn-lg">View All Orphanages →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="section">
+    <div class="container">
+      <h2 class="text-center mb-4">How It Works</h2>
+      <div class="grid grid-4">
+        <div class="card text-center">
+          <h3 class="card-title" style="font-size:3rem;color:var(--primary);">1</h3>
+          <h4>Create Account</h4>
+          <p class="card-text">Sign up free and get a welcome email instantly.</p>
+        </div>
+        <div class="card text-center">
+          <h3 class="card-title" style="font-size:3rem;color:var(--primary);">2</h3>
+          <h4>Choose an Orphanage</h4>
+          <p class="card-text">Browse verified orphanages and find a cause you care about.</p>
+        </div>
+        <div class="card text-center">
+          <h3 class="card-title" style="font-size:3rem;color:var(--primary);">3</h3>
+          <h4>Donate or Visit</h4>
+          <p class="card-text">Send money/items or book an appointment to visit in person.</p>
+        </div>
+        <div class="card text-center">
+          <h3 class="card-title" style="font-size:3rem;color:var(--primary);">4</h3>
+          <h4>Share Feedback</h4>
+          <p class="card-text">Leave a review to help others find the best causes to support.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Community Feedback -->
+  <section class="section" style="background:rgba(220,38,38,0.04);">
+    <div class="container">
+      <h2 class="text-center mb-4">⭐ What Our Donors Say</h2>
+      <p class="text-center mb-4" style="color:var(--text-secondary);">Real feedback from our generous community</p>
+      <div class="grid grid-3" id="feedbackContainer">
+        <div class="card text-center"><p style="color:var(--text-muted);">Loading feedback...</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section">
+    <div class="container text-center">
+      <h2 class="mb-3">Ready to Make a Difference?</h2>
+      <p class="mb-4" style="font-size:1.125rem;color:var(--text-secondary);">
+        Join thousands of people already making an impact in their communities.
+      </p>
+      <div class="d-flex gap-2 justify-center" style="flex-wrap:wrap;">
+        <a href="register.html" class="btn btn-primary btn-lg">Get Started Now</a>
+        <a href="orphanages.html" class="btn btn-outline btn-lg">Browse Orphanages</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background:var(--glass-bg);padding:2rem;text-align:center;border-top:1px solid var(--glass-border);">
+    <p style="color:var(--text-muted);">© 2026 KindConnect. Making the world a better place, one connection at a time.</p>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Hero slider
+    const slides = [
+      { img:'img/children.png', title:'Make a Difference Today',  sub:'Connect with orphanages, donate money or items, and change children\'s lives.' },
+      { img:'img/elderly.png',  title:'Care for Those in Need',    sub:'Support care homes and bring warmth to those who need it most.' },
+      { img:'img/foodbank.png', title:'Fight Hunger Together',     sub:'Help provide food, clothing and essentials to children in need.' },
+    ];
+    let slideIdx = 0;
+    setInterval(() => {
+      slideIdx = (slideIdx + 1) % slides.length;
+      const s = slides[slideIdx];
+      document.getElementById('heroSlider').style.backgroundImage = `url('${s.img}')`;
+      document.getElementById('heroTitle').textContent    = s.title;
+      document.getElementById('heroSubtitle').textContent = s.sub;
+    }, 4000);
+
+    // Nav update
+    if (isLoggedIn() && getUser()) {
+      const role = getRole();
+      const dash = role==='admin' ? 'admin/admin-dashboard.html' : role==='orphanage' ? 'orphanage-dashboard.html' : 'user-dashboard.html';
+      const name = getUser().full_name || getUser().name || 'User';
+      document.getElementById('navMenu').innerHTML = `
+        <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+        <li><a href="donate.html" class="nav-link">Donate</a></li>
+        <li><a href="appointment.html" class="nav-link">Book Visit</a></li>
+        <li><a href="${dash}" class="nav-link">Dashboard</a></li>
+        <li><span class="nav-link" style="color:var(--text-muted);font-size:0.85rem;">Hi, ${name}</span></li>
+        <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>`;
+    }
+
+    // Stars helper
+    function starsHTML(rating) {
+      return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    }
+
+    async function loadPage() {
+      // Orphanages
+      try {
+        const orgs = await apiListOrphanages();
+        document.getElementById('statOrphanages').textContent = orgs.count || 0;
+        const list = (orgs.orphanages || []).slice(0, 3);
+        const fc   = document.getElementById('featuredOrphanages');
+        if (!list.length) { fc.innerHTML='<p class="text-center" style="color:var(--text-muted);">No orphanages yet.</p>'; }
+        else fc.innerHTML = list.map(o => `
+          <div class="card">
+            <h3 class="card-title">🏠 ${o.name}</h3>
+            <p class="card-text" style="margin-bottom:0.5rem;">📍 ${o.address}</p>
+            ${o.description ? `<p class="card-text">${o.description.substring(0,80)}...</p>` : ''}
+            <div class="d-flex gap-2 mt-3">
+              <a href="donate.html?orphanage_id=${o.id}" class="btn btn-primary btn-sm">💝 Donate</a>
+              <a href="appointment.html?orphanage_id=${o.id}" class="btn btn-outline btn-sm">📅 Visit</a>
+            </div>
+          </div>`).join('');
+      } catch(e) {}
+
+      // Feedback
+      try {
+        const fb = await apiPublicFeedback();
+        const list = fb.feedback || [];
+        document.getElementById('statFeedback').textContent = list.length;
+        const el = document.getElementById('feedbackContainer');
+        if (!list.length) {
+          el.innerHTML = `<div class="card text-center" style="grid-column:1/-1;">
+            <p style="font-size:2rem;margin-bottom:0.5rem;">⭐</p>
+            <p style="color:var(--text-muted);">No feedback yet. Be the first to share your experience!</p>
+          </div>`; return;
+        }
+        const categoryLabels = { general:'🌟 General', donation:'💝 Donation', appointment:'📅 Appointment', ui:'🎨 Design & UI' };
+        el.innerHTML = list.slice(0, 6).map(f => `
+          <div class="feedback-card">
+            <div class="stars">${starsHTML(f.rating)}</div>
+            <div class="feedback-author">${f.donor_name || 'Anonymous'}</div>
+            <div class="feedback-org">${categoryLabels[f.category] || '🌟 General'}</div>
+            <div class="feedback-comment">"${f.comment}"</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.75rem;">${formatDate(f.created_at)}</div>
+          </div>`).join('');
+      } catch(e) {
+        document.getElementById('feedbackContainer').innerHTML =
+          '<div class="card text-center" style="grid-column:1/-1;"><p style="color:var(--text-muted);">Could not load feedback.</p></div>';
+      }
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

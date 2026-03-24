@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Orphanages - KindConnect Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="admin-dashboard.html" class="navbar-brand">KindConnect Admin</a>
+    <ul class="navbar-nav">
+      <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="manage-orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="donations.html" class="nav-link">Donations</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container section">
+    <h1 class="mb-4">Manage Orphanages</h1>
+
+    <!-- Stats row -->
+    <div class="grid grid-3 mb-4" id="orgStats">
+      <div class="stat-card"><div class="stat-value" id="statCount">—</div><div class="stat-label">Total Orphanages</div></div>
+    </div>
+
+    <div id="orphanagesContainer"></div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;">
+      <div class="card" style="max-width:420px;width:90%;margin:0 auto;">
+        <h3 class="mb-3">⚠️ Confirm Delete</h3>
+        <p id="deleteMsg" style="margin-bottom:1.5rem;"></p>
+        <div class="d-flex gap-2 justify-center">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!requireAdminAuth()) {}
+
+    let deleteTarget = null;
+
+    async function loadOrphanages() {
+      try {
+        const data = await apiAdminOrphanages();
+        const list = data.orphanages || [];
+        document.getElementById('statCount').textContent = list.length;
+
+        if (!list.length) {
+          document.getElementById('orphanagesContainer').innerHTML =
+            '<div class="card text-center"><p style="color:var(--text-muted);">No orphanages registered yet.</p></div>';
+          return;
+        }
+
+        document.getElementById('orphanagesContainer').innerHTML = `
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Contact Person</th><th>Phone</th><th>Address</th><th>Reg. No</th><th>Joined</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                ${list.map(o => `<tr>
+                  <td><strong>${o.name}</strong></td>
+                  <td>${o.email}</td>
+                  <td>${o.contact_person}</td>
+                  <td>${o.phone || '—'}</td>
+                  <td>${o.address}</td>
+                  <td>${o.registration_number || '—'}</td>
+                  <td>${formatDate(o.created_at)}</td>
+                  <td><button class="btn btn-danger btn-sm" onclick="openModal('${o.id}','${o.name.replace(/'/g,'')}')">Delete</button></td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      } catch(e) {
+        document.getElementById('orphanagesContainer').innerHTML =
+          `<div class="card"><p style="color:var(--danger);">Failed: ${e.message}</p></div>`;
+      }
+    }
+
+    function openModal(id, name) {
+      deleteTarget = id;
+      document.getElementById('deleteMsg').textContent = `Are you sure you want to delete orphanage "${name}"? This cannot be undone.`;
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+      deleteTarget = null;
+    }
+
+    async function confirmDelete() {
+      if (!deleteTarget) return;
+      try {
+        await apiAdminDeleteOrphanage(deleteTarget);
+        showAlert('Orphanage deleted.', 'success');
+        closeModal();
+        loadOrphanages();
+      } catch(e) {
+        showAlert('Failed: ' + e.message, 'danger');
+        closeModal();
+      }
+    }
+
+    loadOrphanages();
+  </script>
+</body>
+</html>

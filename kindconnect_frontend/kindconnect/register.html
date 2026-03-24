@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - KindConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="navbar-brand">KindConnect</a>
+    <ul class="navbar-nav">
+      <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="index.html" class="nav-link">Login</a></li>
+    </ul>
+  </nav>
+
+  <div class="container-sm section">
+    <div class="card">
+      <h1 class="text-center mb-3">Create Your Account</h1>
+      <p class="text-center mb-4" style="color:var(--text-secondary);">Join KindConnect and start making a difference today</p>
+
+      <!-- Alert area — always visible at the top -->
+      <div id="alertArea"></div>
+
+      <!-- Role Tabs -->
+      <div class="d-flex gap-2 mb-3" style="border-bottom:2px solid var(--glass-border);padding-bottom:1rem;">
+        <button class="btn btn-primary btn-sm" id="tabUser" onclick="setRole('user')">👤 Register as Donor</button>
+        <button class="btn btn-outline btn-sm" id="tabOrphanage" onclick="setRole('orphanage')">🏠 Register Orphanage</button>
+      </div>
+
+      <!-- ── Donor Fields ── -->
+      <div id="userFields">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="userName" class="form-control" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <div class="d-flex" style="gap:10px;">
+            <input type="email" id="userEmail" class="form-control" placeholder="your@email.com" style="flex:1;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="verifyEmail('userEmail')">Verify</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" id="userPhone" class="form-control" placeholder="+91 98765 43210">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input type="text" id="userAddress" class="form-control" placeholder="Your city / address">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password * <small style="color:var(--text-muted);">(min 6 characters)</small></label>
+          <div style="position:relative;">
+            <input type="password" id="userPassword" class="form-control" placeholder="At least 6 characters" style="padding-right:40px;">
+            <button type="button" onclick="togglePasswordVisibility('userPassword',this)"
+              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.2rem;padding:0;">👁️</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password *</label>
+          <div style="position:relative;">
+            <input type="password" id="userConfirmPassword" class="form-control" placeholder="Re-enter your password" style="padding-right:40px;">
+            <button type="button" onclick="togglePasswordVisibility('userConfirmPassword',this)"
+              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.2rem;padding:0;">👁️</button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg mt-3" id="registerBtn" onclick="handleRegister()">
+          Create Account
+        </button>
+      </div>
+
+      <!-- ── Orphanage Fields ── -->
+      <div id="orphanageFields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Orphanage Name *</label>
+          <input type="text" id="orgName" class="form-control" placeholder="Name of orphanage">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <div class="d-flex" style="gap:10px;">
+            <input type="email" id="orgEmail" class="form-control" placeholder="contact@orphanage.org" style="flex:1;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="verifyEmail('orgEmail')">Verify</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Person *</label>
+          <input type="text" id="orgContact" class="form-control" placeholder="Name of primary contact">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" id="orgPhone" class="form-control" placeholder="+91 98765 43210">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address *</label>
+          <input type="text" id="orgAddress" class="form-control" placeholder="Full address of orphanage">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Registration Number</label>
+          <input type="text" id="orgRegNum" class="form-control" placeholder="Optional registration number">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="orgDescription" class="form-control" placeholder="Brief description of the orphanage and its mission..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password * <small style="color:var(--text-muted);">(min 6 characters)</small></label>
+          <div style="position:relative;">
+            <input type="password" id="orgPassword" class="form-control" placeholder="At least 6 characters" style="padding-right:40px;">
+            <button type="button" onclick="togglePasswordVisibility('orgPassword',this)"
+              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.2rem;padding:0;">👁️</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password *</label>
+          <div style="position:relative;">
+            <input type="password" id="orgConfirmPassword" class="form-control" placeholder="Re-enter password" style="padding-right:40px;">
+            <button type="button" onclick="togglePasswordVisibility('orgConfirmPassword',this)"
+              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.2rem;padding:0;">👁️</button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg mt-3" id="orgRegisterBtn" onclick="handleRegisterOrphanage()">
+          Register Orphanage
+        </button>
+      </div>
+
+      <p class="text-center mt-3" style="color:var(--text-secondary);">
+        Already have an account? <a href="index.html" style="color:var(--primary);">Login here</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    let selectedRole = 'user';
+
+    function setRole(role) {
+      selectedRole = role;
+      document.getElementById('userFields').style.display      = role === 'user'      ? 'block' : 'none';
+      document.getElementById('orphanageFields').style.display = role === 'orphanage' ? 'block' : 'none';
+      document.getElementById('tabUser').className      = role === 'user'      ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('tabOrphanage').className = role === 'orphanage' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      clearAlert();
+    }
+
+    function showMsg(msg, type) {
+      const el = document.getElementById('alertArea');
+      el.innerHTML = `<div class="alert alert-${type}" style="margin-bottom:1rem;">${msg}</div>`;
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function clearAlert() {
+      document.getElementById('alertArea').innerHTML = '';
+    }
+
+    function verifyEmail(inputId) {
+      const val = document.getElementById(inputId).value.trim();
+      const ok  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      if (!val)    showMsg('Please enter an email address first.', 'warning');
+      else if (ok) showMsg('✅ Email format is valid!', 'success');
+      else         showMsg('❌ Invalid email format. Please check again.', 'danger');
+    }
+
+    function validate(fields) {
+      for (const [id, label] of fields) {
+        const el = document.getElementById(id);
+        if (!el || !el.value.trim()) {
+          showMsg(`⚠️ "${label}" is required.`, 'danger');
+          el && el.focus();
+          return false;
+        }
+      }
+      return true;
+    }
+
+    async function handleRegister() {
+      clearAlert();
+      if (!validate([
+        ['userName',            'Full Name'],
+        ['userEmail',           'Email Address'],
+        ['userPassword',        'Password'],
+        ['userConfirmPassword', 'Confirm Password'],
+      ])) return;
+
+      const password = document.getElementById('userPassword').value;
+      const confirm  = document.getElementById('userConfirmPassword').value;
+      if (password.length < 6)  { showMsg('⚠️ Password must be at least 6 characters.', 'danger'); return; }
+      if (password !== confirm)  { showMsg('⚠️ Passwords do not match.', 'danger'); return; }
+
+      const btn = document.getElementById('registerBtn');
+      btn.textContent = 'Creating account...'; btn.disabled = true;
+
+      try {
+        await apiRegisterUser({
+          full_name: document.getElementById('userName').value.trim(),
+          email:     document.getElementById('userEmail').value.trim(),
+          password,
+          phone:     document.getElementById('userPhone').value.trim()   || null,
+          address:   document.getElementById('userAddress').value.trim() || null,
+        });
+        showMsg('✅ Account created successfully! Redirecting to login...', 'success');
+        setTimeout(() => window.location.href = 'index.html', 1500);
+      } catch(err) {
+        showMsg('❌ ' + err.message, 'danger');
+      } finally {
+        btn.textContent = 'Create Account'; btn.disabled = false;
+      }
+    }
+
+    async function handleRegisterOrphanage() {
+      clearAlert();
+      if (!validate([
+        ['orgName',            'Orphanage Name'],
+        ['orgEmail',           'Email Address'],
+        ['orgContact',         'Contact Person'],
+        ['orgAddress',         'Address'],
+        ['orgPassword',        'Password'],
+        ['orgConfirmPassword', 'Confirm Password'],
+      ])) return;
+
+      const password = document.getElementById('orgPassword').value;
+      const confirm  = document.getElementById('orgConfirmPassword').value;
+      if (password.length < 6)  { showMsg('⚠️ Password must be at least 6 characters.', 'danger'); return; }
+      if (password !== confirm)  { showMsg('⚠️ Passwords do not match.', 'danger'); return; }
+
+      const btn = document.getElementById('orgRegisterBtn');
+      btn.textContent = 'Registering...'; btn.disabled = true;
+
+      try {
+        await apiRegisterOrphanage({
+          name:                document.getElementById('orgName').value.trim(),
+          email:               document.getElementById('orgEmail').value.trim(),
+          password,
+          contact_person:      document.getElementById('orgContact').value.trim(),
+          phone:               document.getElementById('orgPhone').value.trim()       || null,
+          address:             document.getElementById('orgAddress').value.trim(),
+          registration_number: document.getElementById('orgRegNum').value.trim()      || null,
+          description:         document.getElementById('orgDescription').value.trim() || null,
+        });
+        showMsg('✅ Orphanage registered! Redirecting to login...', 'success');
+        setTimeout(() => window.location.href = 'index.html', 1500);
+      } catch(err) {
+        showMsg('❌ ' + err.message, 'danger');
+      } finally {
+        btn.textContent = 'Register Orphanage'; btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

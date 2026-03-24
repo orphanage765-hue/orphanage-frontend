@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback - KindConnect Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="admin-dashboard.html" class="navbar-brand">KindConnect Admin</a>
+    <ul class="navbar-nav">
+      <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="manage-orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="donations.html" class="nav-link">Donations</a></li>
+      <li><a href="appointments.html" class="nav-link">Appointments</a></li>
+      <li><a href="feedback.html" class="nav-link">Feedback</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container section">
+    <h1 class="mb-4">All Feedback</h1>
+
+    <div class="grid grid-3 mb-4">
+      <div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Reviews</div></div>
+      <div class="stat-card"><div class="stat-value" id="statAvg">—</div><div class="stat-label">Average Rating</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat5star">0</div><div class="stat-label">5-Star Reviews</div></div>
+    </div>
+
+    <div id="container"></div>
+
+    <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;">
+      <div class="card" style="max-width:420px;width:90%;margin:0 auto;">
+        <h3 class="mb-3">⚠️ Confirm Delete</h3>
+        <p style="margin-bottom:1.5rem;">Delete this feedback? This cannot be undone.</p>
+        <div class="d-flex gap-2 justify-center">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-danger"  onclick="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!requireAdminAuth()) {}
+    let deleteId = null;
+
+    function stars(r) { return '★'.repeat(r)+'☆'.repeat(5-r); }
+
+    async function load() {
+      try {
+        const data = await apiAdminAllFeedback();
+        const list = data.feedback || [];
+        document.getElementById('statTotal').textContent = list.length;
+        if (list.length) {
+          const avg = list.reduce((s,f)=>s+f.rating,0)/list.length;
+          document.getElementById('statAvg').textContent  = avg.toFixed(1) + ' ⭐';
+          document.getElementById('stat5star').textContent = list.filter(f=>f.rating===5).length;
+        }
+
+        const el = document.getElementById('container');
+        if (!list.length) { el.innerHTML='<div class="card text-center"><p style="color:var(--text-muted);">No feedback yet.</p></div>'; return; }
+        el.innerHTML = `<div class="table-container"><table>
+          <thead><tr><th>Donor</th><th>Category</th><th>Rating</th><th>Comment</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody>${list.map(f=>`<tr>
+            <td>${f.donor_name}</td>
+            <td style='text-transform:capitalize;'>${f.category||'general'}</td>
+            <td style="color:#f59e0b;font-size:1.1rem;">${stars(f.rating)}</td>
+            <td style="max-width:300px;">${f.comment}</td>
+            <td>${formatDate(f.created_at)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="openModal('${f.id}')">Delete</button></td>
+          </tr>`).join('')}</tbody>
+        </table></div>`;
+      } catch(e) {
+        document.getElementById('container').innerHTML = `<div class="card"><p style="color:var(--danger);">Failed: ${e.message}</p></div>`;
+      }
+    }
+
+    function openModal(id) { deleteId=id; document.getElementById('deleteModal').style.display='flex'; }
+    function closeModal()  { deleteId=null; document.getElementById('deleteModal').style.display='none'; }
+    async function confirmDelete() {
+      if (!deleteId) return;
+      try { await apiDeleteFeedback(deleteId); closeModal(); load(); }
+      catch(e) { alert('Failed: '+e.message); closeModal(); }
+    }
+
+    load();
+  </script>
+</body>
+</html>

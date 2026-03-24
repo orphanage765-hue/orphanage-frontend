@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orphanages - KindConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="navbar-brand">KindConnect</a>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="index.html" class="nav-link">Login</a></li>
+      <li><a href="register.html" class="nav-link btn btn-primary">Get Started</a></li>
+    </ul>
+  </nav>
+
+  <div class="container section">
+    <h1 class="text-center mb-4">Explore Orphanages</h1>
+    <p class="text-center mb-4" style="color:var(--text-secondary);font-size:1.125rem;">
+      Find orphanages and causes you care about
+    </p>
+
+    <!-- Search / Filter bar -->
+    <div class="d-flex gap-2 mb-4" style="flex-wrap:wrap;">
+      <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search by name or location..."
+        style="max-width:360px;" oninput="filterOrphanages()">
+    </div>
+
+    <div id="orphanagesContainer" class="grid grid-2">
+      <div class="card"><p style="color:var(--text-muted);">Loading orphanages...</p></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    let allOrphanages = [];
+
+    // Dynamic nav
+    if (isLoggedIn()) {
+      const role  = getRole();
+      const dash  = role === 'orphanage' ? 'orphanage-dashboard.html' : 'user-dashboard.html';
+      const user  = getUser();
+      const name  = user?.full_name || user?.name || 'User';
+      document.getElementById('navMenu').innerHTML = `
+        <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+        <li><a href="donate.html" class="nav-link">Donate</a></li>
+        <li><a href="${dash}" class="nav-link">Dashboard</a></li>
+        <li><span class="nav-link" style="color:var(--text-muted);font-size:0.85rem;">Hi, ${name}</span></li>
+        <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>`;
+    }
+
+    async function loadOrphanages() {
+      try {
+        const data = await apiListOrphanages();
+        allOrphanages = data.orphanages || [];
+        renderOrphanages(allOrphanages);
+      } catch(e) {
+        document.getElementById('orphanagesContainer').innerHTML =
+          `<div class="card"><p style="color:var(--danger);">⚠️ Failed to load. Is the backend running on localhost:8000?</p></div>`;
+      }
+    }
+
+    function renderOrphanages(list) {
+      const container = document.getElementById('orphanagesContainer');
+      if (!list.length) {
+        container.innerHTML = '<div class="card text-center"><p style="color:var(--text-muted);">No orphanages registered yet.</p></div>';
+        return;
+      }
+      container.innerHTML = list.map(o => `
+        <div class="card">
+          <div class="d-flex justify-between align-center mb-3">
+            <h3 class="card-title" style="margin:0;">🏠 ${o.name}</h3>
+            <span class="badge badge-approved" style="font-size:0.75rem;">Verified</span>
+          </div>
+          <p class="card-text" style="margin-bottom:0.5rem;">📍 ${o.address}</p>
+          ${o.description ? `<p class="card-text">${o.description}</p>` : ''}
+          <p class="card-text" style="margin-bottom:0.25rem;">👤 ${o.contact_person}</p>
+          <p class="card-text" style="margin-bottom:0.25rem;">✉️ ${o.email}</p>
+          ${o.phone ? `<p class="card-text" style="margin-bottom:0.25rem;">📞 ${o.phone}</p>` : ''}
+          <div class="d-flex gap-2 mt-3">
+            <a href="donate.html?orphanage_id=${o.id}" class="btn btn-primary btn-sm">💝 Donate</a>
+          </div>
+        </div>`).join('');
+    }
+
+    function filterOrphanages() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allOrphanages.filter(o =>
+        o.name.toLowerCase().includes(q) || o.address.toLowerCase().includes(q)
+      );
+      renderOrphanages(filtered);
+    }
+
+    loadOrphanages();
+  </script>
+</body>
+</html>

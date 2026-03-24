@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Appointment - KindConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="navbar-brand">KindConnect</a>
+    <ul class="navbar-nav">
+      <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="user-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container-sm section">
+    <div class="card">
+      <h1 class="text-center mb-3">📅 Book an Appointment</h1>
+      <p class="text-center mb-4" style="color:var(--text-secondary);">
+        Schedule a visit to an orphanage and make a personal impact
+      </p>
+
+      <div id="alertArea"></div>
+
+      <form onsubmit="handleAppointment(event)">
+        <div class="form-group">
+          <label class="form-label">Select Orphanage *</label>
+          <select id="orphanageId" class="form-control" required>
+            <option value="">-- Select an Orphanage --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Preferred Date *</label>
+          <input type="date" id="apptDate" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Preferred Time *</label>
+          <input type="time" id="apptTime" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Purpose of Visit *</label>
+          <textarea id="purpose" class="form-control"
+            placeholder="Tell us why you'd like to visit — e.g. donate items, spend time with children, volunteer..."
+            required minlength="5"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Additional Notes</label>
+          <textarea id="notes" class="form-control"
+            placeholder="Any special requirements or information..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-3" id="apptBtn">
+          📅 Book Appointment
+        </button>
+      </form>
+
+      <p class="text-center mt-3">
+        <a href="orphanages.html" style="color:var(--primary);">← Back to Orphanages</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (!requireAuth('index.html')) {}
+
+    // Set min date to today
+    document.getElementById('apptDate').min = new Date().toISOString().split('T')[0];
+
+    const params = new URLSearchParams(window.location.search);
+
+    async function init() {
+      try {
+        const data = await apiListOrphanages();
+        const sel  = document.getElementById('orphanageId');
+        (data.orphanages || []).forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o.id;
+          opt.textContent = o.name;
+          sel.appendChild(opt);
+        });
+        if (params.get('orphanage_id')) sel.value = params.get('orphanage_id');
+      } catch(e) {}
+    }
+
+    function showAlert(msg, type) {
+      document.getElementById('alertArea').innerHTML =
+        `<div class="alert alert-${type}">${msg}</div>`;
+      setTimeout(() => document.getElementById('alertArea').innerHTML = '', 5000);
+    }
+
+    async function handleAppointment(e) {
+      e.preventDefault();
+      if (!document.getElementById('orphanageId').value) {
+        showAlert('Please select an orphanage.', 'danger'); return;
+      }
+      const btn = document.getElementById('apptBtn');
+      btn.textContent = 'Booking...'; btn.disabled = true;
+      try {
+        await apiBookAppointment({
+          orphanage_id:     document.getElementById('orphanageId').value,
+          appointment_date: document.getElementById('apptDate').value,
+          appointment_time: document.getElementById('apptTime').value,
+          purpose:          document.getElementById('purpose').value.trim(),
+          notes:            document.getElementById('notes').value.trim() || null,
+        });
+        showAlert('✅ Appointment booked! Check your email for confirmation.', 'success');
+        setTimeout(() => window.location.href = 'user-dashboard.html', 1800);
+      } catch(err) {
+        showAlert('Error: ' + err.message, 'danger');
+      } finally {
+        btn.textContent = '📅 Book Appointment'; btn.disabled = false;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

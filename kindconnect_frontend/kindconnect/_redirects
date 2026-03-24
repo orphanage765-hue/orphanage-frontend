@@ -1,0 +1,11 @@
+# Netlify Redirects
+# All pages serve as-is (no SPA rewriting needed for plain HTML)
+# This file ensures clean URL handling
+
+/home        /home.html        200
+/login       /index.html       200
+/register    /register.html    200
+/donate      /donate.html      200
+/orphanages  /orphanages.html  200
+/appointment /appointment.html 200
+/dashboard   /user-dashboard.html  200

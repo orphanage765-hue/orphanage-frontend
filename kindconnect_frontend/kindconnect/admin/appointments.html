@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointments - KindConnect Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="admin-dashboard.html" class="navbar-brand">KindConnect Admin</a>
+    <ul class="navbar-nav">
+      <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="manage-orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="donations.html" class="nav-link">Donations</a></li>
+      <li><a href="appointments.html" class="nav-link">Appointments</a></li>
+      <li><a href="feedback.html" class="nav-link">Feedback</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container section">
+    <h1 class="mb-4">All Appointments</h1>
+
+    <div class="grid grid-3 mb-4">
+      <div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-value" id="statPending">0</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card"><div class="stat-value" id="statApproved">0</div><div class="stat-label">Approved</div></div>
+    </div>
+
+    <div class="d-flex gap-2 mb-4" style="flex-wrap:wrap;">
+      <button class="btn btn-primary"  id="fAll"      onclick="filter('all')">All</button>
+      <button class="btn btn-outline"  id="fPending"  onclick="filter('pending')">⏳ Pending</button>
+      <button class="btn btn-outline"  id="fApproved" onclick="filter('approved')">✅ Approved</button>
+      <button class="btn btn-outline"  id="fRejected" onclick="filter('rejected')">❌ Rejected</button>
+    </div>
+
+    <div id="container"></div>
+
+    <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;">
+      <div class="card" style="max-width:420px;width:90%;margin:0 auto;">
+        <h3 class="mb-3">⚠️ Confirm Delete</h3>
+        <p style="margin-bottom:1.5rem;">Delete this appointment? This cannot be undone.</p>
+        <div class="d-flex gap-2 justify-center">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-danger"  onclick="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!requireAdminAuth()) {}
+    let all = [], currentFilter = 'all', deleteId = null;
+
+    async function load() {
+      try {
+        const data = await apiAdminAllAppointments();
+        all = data.appointments || [];
+        document.getElementById('statTotal').textContent   = all.length;
+        document.getElementById('statPending').textContent = all.filter(a=>a.status==='pending').length;
+        document.getElementById('statApproved').textContent= all.filter(a=>a.status==='approved').length;
+        render(currentFilter);
+      } catch(e) {
+        document.getElementById('container').innerHTML = `<div class="card"><p style="color:var(--danger);">Failed: ${e.message}</p></div>`;
+      }
+    }
+
+    function render(f) {
+      const list = f==='all' ? all : all.filter(a=>a.status===f);
+      const el   = document.getElementById('container');
+      if (!list.length) { el.innerHTML='<div class="card text-center"><p style="color:var(--text-muted);">No appointments found.</p></div>'; return; }
+      el.innerHTML = `<div class="table-container"><table>
+        <thead><tr><th>Donor</th><th>Orphanage</th><th>Date</th><th>Time</th><th>Purpose</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>${list.map(a=>{
+          const sc = a.status==='approved'?'badge-approved':a.status==='rejected'?'badge-rejected':'badge-pending';
+          return `<tr>
+            <td>${a.user_name}<br><small style="color:var(--text-muted);">${a.user_email}</small></td>
+            <td>${a.orphanage_name}</td>
+            <td>${a.appointment_date}</td><td>${a.appointment_time}</td>
+            <td>${a.purpose}</td>
+            <td><span class="badge ${sc}">${a.status}</span></td>
+            <td><button class="btn btn-danger btn-sm" onclick="openModal('${a.id}')">Delete</button></td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+    }
+
+    function filter(f) {
+      currentFilter = f;
+      ['all','pending','approved','rejected'].forEach(k=>{
+        const btn=document.getElementById('f'+k.charAt(0).toUpperCase()+k.slice(1));
+        if(btn) btn.className=k===f?'btn btn-primary':'btn btn-outline';
+      });
+      render(f);
+    }
+
+    function openModal(id) { deleteId=id; document.getElementById('deleteModal').style.display='flex'; }
+    function closeModal()  { deleteId=null; document.getElementById('deleteModal').style.display='none'; }
+    async function confirmDelete() {
+      if (!deleteId) return;
+      try { await apiDeleteAppointment(deleteId); closeModal(); load(); }
+      catch(e) { alert('Failed: '+e.message); closeModal(); }
+    }
+
+    load();
+  </script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - KindConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="navbar-brand">KindConnect</a>
+    <ul class="navbar-nav">
+      <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="register.html" class="nav-link">Register</a></li>
+    </ul>
+  </nav>
+
+  <div class="container-sm section">
+    <div class="card">
+      <h1 class="text-center mb-3">Welcome Back</h1>
+      <p class="text-center mb-4" style="color:var(--text-secondary);">Login to continue making a difference</p>
+
+      <!-- Role Tabs -->
+      <div class="d-flex gap-2 mb-3" style="border-bottom:2px solid var(--glass-border);padding-bottom:1rem;">
+        <button class="btn btn-primary btn-sm" id="tabUser" onclick="setRole('user')">👤 Donor</button>
+        <button class="btn btn-outline btn-sm" id="tabOrphanage" onclick="setRole('orphanage')">🏠 Orphanage</button>
+      </div>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="email" class="form-control" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div style="position:relative;">
+            <input type="password" id="password" class="form-control" placeholder="Enter your password" required style="padding-right:40px;">
+            <button type="button" onclick="togglePasswordVisibility('password',this)"
+              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.2rem;padding:0;">👁️</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-3" id="loginBtn">Login</button>
+      </form>
+
+      <p class="text-center mt-3" style="color:var(--text-secondary);">
+        Don't have an account? <a href="register.html" style="color:var(--primary);">Register here</a>
+      </p>
+      <p class="text-center mt-2" style="color:var(--text-secondary);">
+        Admin? <a href="admin/admin-login.html" style="color:var(--secondary);">Login as Admin</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    let selectedRole = 'user';
+
+    // Redirect if already logged in
+    if (isLoggedIn()) {
+      const role = getRole();
+      if (role === 'admin')      window.location.href = 'admin/admin-dashboard.html';
+      else if (role === 'orphanage') window.location.href = 'orphanage-dashboard.html';
+      else                           window.location.href = 'user-dashboard.html';
+    }
+
+    function setRole(role) {
+      selectedRole = role;
+      document.getElementById('tabUser').className      = role === 'user'      ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('tabOrphanage').className = role === 'orphanage' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      btn.textContent = 'Logging in...'; btn.disabled = true;
+      try {
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const res      = await apiLogin(email, password, selectedRole);
+
+        saveSession(res.access_token, res.role, {});
+        // Fetch full profile
+        const profile = await apiGetMyProfile();
+        saveSession(res.access_token, res.role, profile || { email });
+
+        showAlert('Login successful! Redirecting...', 'success');
+        setTimeout(() => {
+          if (res.role === 'orphanage') window.location.href = 'orphanage-dashboard.html';
+          else                          window.location.href = 'user-dashboard.html';
+        }, 800);
+      } catch(err) {
+        showAlert('Error: ' + err.message, 'danger');
+      } finally {
+        btn.textContent = 'Login'; btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

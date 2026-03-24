@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donations - KindConnect Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="admin-dashboard.html" class="navbar-brand">KindConnect Admin</a>
+    <ul class="navbar-nav">
+      <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="manage-orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="donations.html" class="nav-link">Donations</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container section">
+    <h1 class="mb-4">All Donations</h1>
+
+    <!-- Stats -->
+    <div class="grid grid-3 mb-4">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Total Donations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statMoney">0</div>
+        <div class="stat-label">Money Donations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statAmount">₹0</div>
+        <div class="stat-label">Total Amount</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="d-flex gap-2 mb-4">
+      <button class="btn btn-primary"  id="filterAll"       onclick="filter('all')">All</button>
+      <button class="btn btn-outline"  id="filterMoney"     onclick="filter('money')">💰 Money</button>
+      <button class="btn btn-outline"  id="filterItems"     onclick="filter('items')">📦 Items</button>
+      <button class="btn btn-outline"  id="filterPending"   onclick="filter('pending')">⏳ Pending</button>
+      <button class="btn btn-outline"  id="filterConfirmed" onclick="filter('confirmed')">✅ Confirmed</button>
+    </div>
+
+    <div id="donationsContainer"></div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;">
+      <div class="card" style="max-width:420px;width:90%;margin:0 auto;">
+        <h3 class="mb-3">⚠️ Confirm Delete</h3>
+        <p style="margin-bottom:1.5rem;">Are you sure you want to delete this donation record?</p>
+        <div class="d-flex gap-2 justify-center">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-danger"  onclick="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!requireAdminAuth()) {}
+
+    let allDonations = [];
+    let deleteTarget = null;
+    let currentFilter = 'all';
+
+    async function loadDonations() {
+      try {
+        const data = await apiAdminDonations();
+        allDonations = data.donations || [];
+
+        const moneyList = allDonations.filter(d => d.donation_type === 'money');
+        const totalAmt  = moneyList.reduce((s, d) => s + (d.money_details?.amount || 0), 0);
+
+        document.getElementById('statTotal').textContent  = allDonations.length;
+        document.getElementById('statMoney').textContent  = moneyList.length;
+        document.getElementById('statAmount').textContent = formatAmount(totalAmt);
+
+        renderDonations(currentFilter);
+      } catch(e) {
+        document.getElementById('donationsContainer').innerHTML =
+          `<div class="card"><p style="color:var(--danger);">Failed: ${e.message}</p></div>`;
+      }
+    }
+
+    function renderDonations(f) {
+      let list = allDonations;
+      if (f === 'money')     list = list.filter(d => d.donation_type === 'money');
+      if (f === 'items')     list = list.filter(d => d.donation_type === 'items');
+      if (f === 'pending')   list = list.filter(d => d.status === 'pending');
+      if (f === 'confirmed') list = list.filter(d => d.status === 'confirmed');
+
+      const container = document.getElementById('donationsContainer');
+      if (!list.length) {
+        container.innerHTML = '<div class="card text-center"><p style="color:var(--text-muted);">No donations found.</p></div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>Donor</th><th>Orphanage</th><th>Type</th><th>Detail</th><th>Status</th><th>Date</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              ${list.map(d => {
+                const detail = d.donation_type === 'money'
+                  ? formatAmount(d.money_details?.amount)
+                  : (d.item_details?.items || []).join(', ');
+                const statusClass = d.status === 'confirmed' ? 'badge-approved'
+                                  : d.status === 'cancelled' ? 'badge-rejected' : 'badge-pending';
+                const typeBadge   = d.donation_type === 'money'
+                  ? '<span class="badge" style="background:rgba(21,101,192,0.15);color:#1565C0;border:1px solid #1565C0;">💰 Money</span>'
+                  : '<span class="badge" style="background:rgba(106,27,154,0.15);color:#6A1B9A;border:1px solid #6A1B9A;">📦 Items</span>';
+                return `<tr>
+                  <td>${d.anonymous ? '<em>Anonymous</em>' : d.donor_name}<br><small style="color:var(--text-muted);">${d.anonymous ? '' : d.donor_email}</small></td>
+                  <td>${d.orphanage_name || '—'}</td>
+                  <td>${typeBadge}</td>
+                  <td>${detail}</td>
+                  <td><span class="badge ${statusClass}">${d.status}</span></td>
+                  <td>${formatDate(d.created_at)}</td>
+                  <td><button class="btn btn-danger btn-sm" onclick="openModal('${d.id}')">Delete</button></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function filter(f) {
+      currentFilter = f;
+      const keys = ['all','money','items','pending','confirmed'];
+      keys.forEach(k => {
+        const btn = document.getElementById('filter' + k.charAt(0).toUpperCase() + k.slice(1));
+        if (btn) btn.className = k === f ? 'btn btn-primary' : 'btn btn-outline';
+      });
+      renderDonations(f);
+    }
+
+    function openModal(id) {
+      deleteTarget = id;
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+      deleteTarget = null;
+    }
+
+    async function confirmDelete() {
+      if (!deleteTarget) return;
+      try {
+        await apiAdminDeleteDonation(deleteTarget);
+        showAlert('Donation deleted.', 'success');
+        closeModal();
+        loadDonations();
+      } catch(e) {
+        showAlert('Failed: ' + e.message, 'danger');
+        closeModal();
+      }
+    }
+
+    loadDonations();
+  </script>
+</body>
+</html>

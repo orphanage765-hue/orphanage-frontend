@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - KindConnect</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="admin-dashboard.html" class="navbar-brand">KindConnect Admin</a>
+    <ul class="navbar-nav">
+      <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="manage-orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="donations.html" class="nav-link">Donations</a></li>
+      <li><a href="appointments.html" class="nav-link">Appointments</a></li>
+      <li><a href="feedback.html" class="nav-link">Feedback</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container section">
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <h2 class="mb-3">Overview Statistics</h2>
+    <div class="grid grid-4 mb-4" id="statsContainer">
+      <div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Loading...</div></div>
+    </div>
+
+    <h2 class="mb-3">Registered Donors</h2>
+    <div id="usersContainer"></div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;">
+      <div class="card" style="max-width:420px;width:90%;margin:0 auto;">
+        <h3 class="mb-3">⚠️ Confirm Delete</h3>
+        <p id="deleteMsg" style="margin-bottom:1.5rem;"></p>
+        <div class="d-flex gap-2 justify-center">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-danger"  onclick="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!requireAdminAuth()) {}
+    let deleteTarget = null;
+
+    async function loadDashboard() {
+      try {
+        const stats = await apiAdminStats();
+        document.getElementById('statsContainer').innerHTML = `
+          <div class="stat-card animate-up delay-1"><div class="stat-value">${stats.total_users}</div><div class="stat-label">Donors</div></div>
+          <div class="stat-card animate-up delay-2"><div class="stat-value">${stats.total_orphanages}</div><div class="stat-label">Orphanages</div></div>
+          <div class="stat-card animate-up delay-3"><div class="stat-value">${stats.total_donations}</div><div class="stat-label">Donations</div></div>
+          <div class="stat-card animate-up delay-4"><div class="stat-value">${formatAmount(stats.total_amount_donated)}</div><div class="stat-label">Amount Raised</div></div>`;
+      } catch(e) {}
+
+      try {
+        const data  = await apiAdminUsers();
+        const users = data.users || [];
+        if (!users.length) { document.getElementById('usersContainer').innerHTML='<div class="card text-center"><p style="color:var(--text-muted);">No donors yet.</p></div>'; return; }
+        document.getElementById('usersContainer').innerHTML = `
+          <div class="table-container"><table>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Joined</th><th>Action</th></tr></thead>
+            <tbody>${users.map(u=>`<tr>
+              <td>${u.full_name}</td><td>${u.email}</td>
+              <td>${u.phone||'—'}</td><td>${u.address||'—'}</td>
+              <td>${formatDate(u.created_at)}</td>
+              <td><button class="btn btn-danger btn-sm" onclick="openModal('user','${u.id}','${u.full_name.replace(/'/g,'')}')">Delete</button></td>
+            </tr>`).join('')}</tbody>
+          </table></div>`;
+      } catch(e) {}
+    }
+
+    function openModal(type, id, name) {
+      deleteTarget = {type, id};
+      document.getElementById('deleteMsg').textContent = `Delete "${name}"? This cannot be undone.`;
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('deleteModal').style.display='none'; deleteTarget=null; }
+    async function confirmDelete() {
+      if (!deleteTarget) return;
+      try {
+        if (deleteTarget.type==='user') await apiAdminDeleteUser(deleteTarget.id);
+        closeModal(); loadDashboard();
+      } catch(e) { alert('Failed: '+e.message); closeModal(); }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard - KindConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="navbar-brand">KindConnect</a>
+    <ul class="navbar-nav">
+      <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="user-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container section">
+
+    <!-- Profile Header -->
+    <div id="profileHeader" class="card profile-header theme-default animate-up mb-4">
+      <div class="d-flex justify-between align-center" style="position:relative;z-index:2;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 style="margin-bottom:0;color:white;">Welcome, <span id="userName"></span>!</h1>
+          <p id="profileSubtext" style="color:rgba(255,255,255,0.8);margin-top:0.5rem;margin-bottom:0;">
+            Your dashboard for making a difference.
+          </p>
+        </div>
+        <div class="d-flex gap-2" style="flex-wrap:wrap;">
+          <a href="donate.html" class="btn btn-primary">💝 Donate</a>
+          <a href="appointment.html" class="btn btn-secondary">📅 Book Appointment</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-4 mb-4">
+      <div class="stat-card animate-up delay-1">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Total Donations</div>
+      </div>
+      <div class="stat-card animate-up delay-2">
+        <div class="stat-value" id="statAmount">₹0</div>
+        <div class="stat-label">Money Donated</div>
+      </div>
+      <div class="stat-card animate-up delay-3">
+        <div class="stat-value" id="statAppts">0</div>
+        <div class="stat-label">Appointments</div>
+      </div>
+      <div class="stat-card animate-up delay-4">
+        <div class="stat-value" id="statConfirmed">0</div>
+        <div class="stat-label">Confirmed</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="d-flex gap-2 mb-3 animate-up"
+      style="border-bottom:2px solid var(--glass-border);padding-bottom:1rem;flex-wrap:wrap;">
+      <button class="btn btn-primary" id="tabDonations"    onclick="showTab('donations')">💝 Donations</button>
+      <button class="btn btn-outline" id="tabAppointments" onclick="showTab('appointments')">📅 Appointments</button>
+      <button class="btn btn-outline" id="tabFeedback"     onclick="showTab('feedback')">⭐ App Feedback</button>
+    </div>
+
+    <!-- ── Donations Section ── -->
+    <div id="sectionDonations">
+      <div class="d-flex gap-2 mb-3" style="flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="dfilterAll"   onclick="filterDonations('all')">All</button>
+        <button class="btn btn-outline btn-sm" id="dfilterMoney" onclick="filterDonations('money')">💰 Money</button>
+        <button class="btn btn-outline btn-sm" id="dfilterItems" onclick="filterDonations('items')">📦 Items</button>
+      </div>
+      <div id="donationsContainer"></div>
+    </div>
+
+    <!-- ── Appointments Section ── -->
+    <div id="sectionAppointments" style="display:none;">
+      <div class="d-flex justify-between align-center mb-3" style="flex-wrap:wrap;gap:1rem;">
+        <h2 style="margin:0;">My Appointments</h2>
+        <a href="appointment.html" class="btn btn-primary btn-sm">+ New Appointment</a>
+      </div>
+      <div id="appointmentsContainer"></div>
+    </div>
+
+    <!-- ── App Feedback Section ── -->
+    <div id="sectionFeedback" style="display:none;">
+      <h2 class="mb-3">Share Your Feedback</h2>
+      <div class="card" style="max-width:560px;">
+
+        <p style="color:var(--text-secondary);margin-bottom:1.5rem;">
+          How is your experience with <strong>KindConnect</strong>? Your feedback helps us improve the platform for everyone.
+        </p>
+
+        <div id="feedbackAlert"></div>
+
+        <div class="form-group">
+          <label class="form-label">Your Name <small style="color:var(--text-muted);">(optional — leave blank to be anonymous)</small></label>
+          <input type="text" id="fbName" class="form-control" placeholder="Your name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Feedback Category</label>
+          <select id="fbCategory" class="form-control">
+            <option value="general">🌟 General Experience</option>
+            <option value="donation">💝 Donation Process</option>
+            <option value="appointment">📅 Appointment System</option>
+            <option value="ui">🎨 Website Design & Usability</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Overall Rating *</label>
+          <div id="starRating" class="star-rating" style="justify-content:flex-start;font-size:2rem;gap:0.25rem;">
+            <span onclick="setRating(1)" data-v="1" style="cursor:pointer;transition:transform 0.1s;">★</span>
+            <span onclick="setRating(2)" data-v="2" style="cursor:pointer;transition:transform 0.1s;">★</span>
+            <span onclick="setRating(3)" data-v="3" style="cursor:pointer;transition:transform 0.1s;">★</span>
+            <span onclick="setRating(4)" data-v="4" style="cursor:pointer;transition:transform 0.1s;">★</span>
+            <span onclick="setRating(5)" data-v="5" style="cursor:pointer;transition:transform 0.1s;">★</span>
+          </div>
+          <small id="ratingLabel" style="color:var(--text-muted);display:block;margin-top:4px;">Click a star to rate</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Your Comment *</label>
+          <textarea id="fbComment" class="form-control"
+            placeholder="Tell us about your experience using KindConnect — what you liked, what could be better..."
+            style="min-height:110px;"></textarea>
+          <small id="charCount" style="color:var(--text-muted);">0 / 500</small>
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="submitFeedback()" id="fbBtn">
+          ⭐ Submit Feedback
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (!requireAuth('index.html')) {}
+
+    let allDonations = [], allAppointments = [], selectedRating = 0;
+
+    async function loadDashboard() {
+      const user = getUser();
+      if (user) {
+        document.getElementById('userName').textContent = user.full_name || user.name || 'User';
+        document.getElementById('fbName').value = user.full_name || user.name || '';
+      }
+
+      // Load donations
+      try {
+        const d = await apiMyDonations();
+        allDonations = d.donations || [];
+        const totalMoney = allDonations.filter(x=>x.donation_type==='money').reduce((s,x)=>s+(x.money_details?.amount||0),0);
+        const confirmed  = allDonations.filter(x=>x.status==='confirmed').length;
+        document.getElementById('statTotal').textContent     = allDonations.length;
+        document.getElementById('statAmount').textContent    = formatAmount(totalMoney);
+        document.getElementById('statConfirmed').textContent = confirmed;
+
+        // Dynamic profile theme
+        const ph = document.getElementById('profileHeader');
+        const ps = document.getElementById('profileSubtext');
+        const moneyCount = allDonations.filter(x=>x.donation_type==='money').length;
+        const itemCount  = allDonations.filter(x=>x.donation_type==='items').length;
+        if (moneyCount > itemCount && allDonations.length > 0) {
+          ph.className = 'card profile-header theme-orphanage animate-up mb-4';
+          ps.textContent = 'Champion Donor! Thank you for your generous contributions.';
+        } else if (itemCount > 0) {
+          ph.className = 'card profile-header theme-food-bank animate-up mb-4';
+          ps.textContent = 'Kindness Hero! Thank you for donating items.';
+        } else if (allDonations.length > 0) {
+          ph.className = 'card profile-header theme-elderly-care animate-up mb-4';
+          ps.textContent = 'Thank you for supporting children in need!';
+        }
+
+        renderDonations('all');
+      } catch(e) {}
+
+      // Load appointments
+      try {
+        const a = await apiMyAppointments();
+        allAppointments = a.appointments || [];
+        document.getElementById('statAppts').textContent = allAppointments.length;
+        renderAppointments();
+      } catch(e) {}
+    }
+
+    // ── Donations ─────────────────────────────────────────────────────────────
+    function renderDonations(filter) {
+      const list = filter==='all' ? allDonations : allDonations.filter(d=>d.donation_type===filter);
+      const el   = document.getElementById('donationsContainer');
+      if (!list.length) {
+        el.innerHTML = `<div class="card text-center">
+          <p style="font-size:1.5rem;margin-bottom:0.5rem;">💝</p>
+          <p style="color:var(--text-muted);">No donations yet. <a href="donate.html" style="color:var(--primary);">Make your first donation!</a></p>
+        </div>`; return;
+      }
+      el.innerHTML = `<div class="table-container"><table>
+        <thead><tr><th>Orphanage</th><th>Type</th><th>Detail</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>${list.map(d => {
+          const detail = d.donation_type==='money'
+            ? `<strong>${formatAmount(d.money_details?.amount)}</strong>`
+            : (d.item_details?.items||[]).join(', ');
+          const typeBadge   = d.donation_type==='money'
+            ? `<span class="badge" style="background:rgba(21,101,192,.15);color:#1565C0;border:1px solid #1565C0;">💰 Money</span>`
+            : `<span class="badge" style="background:rgba(106,27,154,.15);color:#6A1B9A;border:1px solid #6A1B9A;">📦 Items</span>`;
+          const statusClass = d.status==='confirmed'?'badge-approved':d.status==='cancelled'?'badge-rejected':'badge-pending';
+          return `<tr>
+            <td>${d.orphanage_name||'—'}</td>
+            <td>${typeBadge}</td>
+            <td>${detail}</td>
+            <td><span class="badge ${statusClass}">${d.status}</span></td>
+            <td>${formatDate(d.created_at)}</td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+    }
+
+    function filterDonations(f) {
+      ['all','money','items'].forEach(k=>{
+        const btn = document.getElementById('dfilter'+k.charAt(0).toUpperCase()+k.slice(1));
+        if (btn) btn.className = k===f ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      });
+      renderDonations(f);
+    }
+
+    // ── Appointments ──────────────────────────────────────────────────────────
+    function renderAppointments() {
+      const el = document.getElementById('appointmentsContainer');
+      if (!allAppointments.length) {
+        el.innerHTML = `<div class="card text-center">
+          <p style="font-size:1.5rem;margin-bottom:0.5rem;">📅</p>
+          <p style="color:var(--text-muted);">No appointments yet. <a href="appointment.html" style="color:var(--primary);">Book one!</a></p>
+        </div>`; return;
+      }
+      el.innerHTML = `<div class="table-container"><table>
+        <thead><tr><th>Orphanage</th><th>Date</th><th>Time</th><th>Purpose</th><th>Status</th><th>Booked</th></tr></thead>
+        <tbody>${allAppointments.map(a=>{
+          const sc = a.status==='approved'?'badge-approved':a.status==='rejected'?'badge-rejected':'badge-pending';
+          return `<tr>
+            <td>${a.orphanage_name||'—'}</td>
+            <td>${a.appointment_date}</td>
+            <td>${a.appointment_time}</td>
+            <td>${a.purpose}</td>
+            <td><span class="badge ${sc}">${a.status}</span></td>
+            <td>${formatDate(a.created_at)}</td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+    }
+
+    // ── App Feedback ──────────────────────────────────────────────────────────
+    function setRating(val) {
+      selectedRating = val;
+      const labels = ['','😞 Poor','😐 Fair','🙂 Good','😊 Very Good','🤩 Excellent!'];
+      document.getElementById('ratingLabel').textContent = labels[val] || '';
+      document.querySelectorAll('#starRating span').forEach(s => {
+        const active = parseInt(s.dataset.v) <= val;
+        s.classList.toggle('active', active);
+        s.style.transform = active ? 'scale(1.15)' : 'scale(1)';
+      });
+    }
+
+    document.getElementById('fbComment').addEventListener('input', function() {
+      const len = this.value.length;
+      document.getElementById('charCount').textContent = len + ' / 500';
+      if (len > 500) this.value = this.value.substring(0, 500);
+    });
+
+    function showFbAlert(msg, type) {
+      const el = document.getElementById('feedbackAlert');
+      el.innerHTML = `<div class="alert alert-${type}" style="margin-bottom:1rem;">${msg}</div>`;
+      setTimeout(() => el.innerHTML = '', 5000);
+    }
+
+    async function submitFeedback() {
+      const comment = document.getElementById('fbComment').value.trim();
+      if (!selectedRating)    { showFbAlert('⚠️ Please select a star rating.', 'danger'); return; }
+      if (comment.length < 3) { showFbAlert('⚠️ Please write a comment (at least 3 characters).', 'danger'); return; }
+
+      const btn = document.getElementById('fbBtn');
+      btn.textContent = 'Submitting...'; btn.disabled = true;
+
+      try {
+        await apiSubmitFeedback({
+          rating:     selectedRating,
+          comment,
+          category:   document.getElementById('fbCategory').value,
+          donor_name: document.getElementById('fbName').value.trim() || null,
+        });
+        showFbAlert('✅ Thank you! Your feedback has been published on the homepage.', 'success');
+        document.getElementById('fbComment').value = '';
+        document.getElementById('charCount').textContent = '0 / 500';
+        setRating(0);
+        selectedRating = 0;
+      } catch(err) {
+        showFbAlert('❌ ' + err.message, 'danger');
+      } finally {
+        btn.textContent = '⭐ Submit Feedback'; btn.disabled = false;
+      }
+    }
+
+    // ── Tab switching ─────────────────────────────────────────────────────────
+    function showTab(tab) {
+      ['donations','appointments','feedback'].forEach(t => {
+        document.getElementById('section'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?'block':'none';
+        const btn = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
+        if (btn) btn.className = t===tab ? 'btn btn-primary' : 'btn btn-outline';
+      });
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

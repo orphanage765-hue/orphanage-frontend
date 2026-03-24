@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make a Donation - KindConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="navbar-brand">KindConnect</a>
+    <ul class="navbar-nav">
+      <li><a href="orphanages.html" class="nav-link">Orphanages</a></li>
+      <li><a href="user-dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="#" class="nav-link" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container-sm section">
+    <div class="card">
+      <h1 class="text-center mb-3">Make a Donation</h1>
+      <p class="text-center mb-4" style="color:var(--text-secondary);">Your generosity makes a real difference</p>
+
+      <div id="alertArea"></div>
+
+      <form id="donationForm" onsubmit="handleDonation(event)">
+
+        <!-- Donor Info -->
+        <div class="form-group">
+          <label class="form-label">Your Name *</label>
+          <input type="text" id="donorName" class="form-control" placeholder="Your full name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Email *</label>
+          <input type="email" id="donorEmail" class="form-control" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Phone</label>
+          <input type="tel" id="donorPhone" class="form-control" placeholder="+91 98765 43210">
+        </div>
+
+        <!-- Orphanage -->
+        <div class="form-group">
+          <label class="form-label">Select Orphanage *</label>
+          <select id="orphanageId" class="form-control" required>
+            <option value="">-- Select an Orphanage --</option>
+          </select>
+        </div>
+
+        <!-- Donation Type -->
+        <div class="form-group">
+          <label class="form-label">Donation Type *</label>
+          <select id="donationType" class="form-control" onchange="toggleDonationType()" required>
+            <option value="">-- Select Type --</option>
+            <option value="money">💰 Money</option>
+            <option value="items">📦 Items (Clothes, Food, Books, etc.)</option>
+          </select>
+        </div>
+
+        <!-- Money Fields -->
+        <div id="moneyGroup" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Amount (₹) *</label>
+            <input type="number" id="amount" class="form-control" placeholder="Enter amount in rupees" min="1" step="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Method</label>
+            <select id="paymentMethod" class="form-control">
+              <option value="upi">UPI</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="cash">Cash</option>
+              <option value="card">Card</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Item Fields -->
+        <div id="itemsGroup" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Items to Donate *</label>
+            <div id="tagsContainer" onclick="document.getElementById('tagInput').focus()"
+              style="min-height:52px;padding:8px 12px;border:1px solid var(--glass-border);border-radius:var(--radius-sm);background:var(--glass-bg);cursor:text;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+              <input type="text" id="tagInput"
+                placeholder="Type item and press Enter (e.g. clothes, books)"
+                style="border:none;outline:none;background:transparent;font-family:inherit;font-size:0.95rem;color:var(--text-primary);min-width:160px;flex:1;"
+                onkeydown="handleTagInput(event)">
+            </div>
+            <small style="color:var(--text-muted);">Press Enter or comma after each item</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quantity Description</label>
+            <input type="text" id="quantityDesc" class="form-control" placeholder="e.g. 2 bags of clothes, 10 books">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Condition</label>
+            <select id="condition" class="form-control">
+              <option value="new">New</option>
+              <option value="good">Good</option>
+              <option value="used">Used</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pickup Required?</label>
+            <select id="pickupRequired" class="form-control" onchange="togglePickup()">
+              <option value="false">No — I will drop off</option>
+              <option value="true">Yes — Need pickup from my address</option>
+            </select>
+          </div>
+          <div class="form-group" id="pickupAddressGroup" style="display:none;">
+            <label class="form-label">Pickup Address</label>
+            <input type="text" id="pickupAddress" class="form-control" placeholder="Your full address for pickup">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message (Optional)</label>
+          <textarea id="message" class="form-control" placeholder="Add a personal message to the orphanage..."></textarea>
+        </div>
+
+        <div class="form-group d-flex align-center gap-2">
+          <input type="checkbox" id="anonymous" style="width:auto;cursor:pointer;">
+          <label for="anonymous" class="form-label" style="margin:0;cursor:pointer;">Donate anonymously</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-3" id="donateBtn">
+          💝 Complete Donation
+        </button>
+      </form>
+
+      <p class="text-center mt-3">
+        <a href="orphanages.html" style="color:var(--primary);">← Back to Orphanages</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    let donationItems = [];
+    const params = new URLSearchParams(window.location.search);
+
+    async function init() {
+      try {
+        const data = await apiListOrphanages();
+        const sel = document.getElementById('orphanageId');
+        (data.orphanages || []).forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o.id;
+          opt.textContent = o.name;
+          sel.appendChild(opt);
+        });
+        const pid = params.get('orphanage_id');
+        if (pid) sel.value = pid;
+      } catch(e) {}
+
+      // Pre-fill logged-in user info
+      const user = getUser();
+      if (user) {
+        document.getElementById('donorName').value  = user.full_name || user.name  || '';
+        document.getElementById('donorEmail').value = user.email                   || '';
+        document.getElementById('donorPhone').value = user.phone                   || '';
+      }
+
+      const urlType = params.get('type');
+      if (urlType) {
+        document.getElementById('donationType').value = urlType;
+        toggleDonationType();
+      }
+    }
+
+    function toggleDonationType() {
+      const type = document.getElementById('donationType').value;
+      document.getElementById('moneyGroup').style.display = type === 'money' ? 'block' : 'none';
+      document.getElementById('itemsGroup').style.display = type === 'items' ? 'block' : 'none';
+    }
+
+    function togglePickup() {
+      const needed = document.getElementById('pickupRequired').value === 'true';
+      document.getElementById('pickupAddressGroup').style.display = needed ? 'block' : 'none';
+    }
+
+    function handleTagInput(e) {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const val = e.target.value.replace(',', '').trim();
+        if (val && !donationItems.includes(val.toLowerCase())) {
+          donationItems.push(val.toLowerCase());
+          renderTags();
+        }
+        e.target.value = '';
+      } else if (e.key === 'Backspace' && !e.target.value && donationItems.length) {
+        donationItems.pop();
+        renderTags();
+      }
+    }
+
+    function removeTag(i) {
+      donationItems.splice(i, 1);
+      renderTags();
+    }
+
+    function renderTags() {
+      const container = document.getElementById('tagsContainer');
+      const input     = document.getElementById('tagInput');
+      container.innerHTML = '';
+      donationItems.forEach((item, i) => {
+        const span = document.createElement('span');
+        span.innerHTML = `${item} <button onclick="removeTag(${i})" type="button"
+          style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:1rem;padding:0;margin-left:2px;">×</button>`;
+        span.style.cssText = 'background:rgba(220,38,38,0.1);color:var(--primary);padding:3px 10px;border-radius:999px;font-size:0.82rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;';
+        container.appendChild(span);
+      });
+      container.appendChild(input);
+    }
+
+    function showLocalAlert(msg, type) {
+      const area = document.getElementById('alertArea');
+      area.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+      setTimeout(() => area.innerHTML = '', 5000);
+    }
+
+    async function handleDonation(e) {
+      e.preventDefault();
+
+      const type = document.getElementById('donationType').value;
+      if (!type) { showLocalAlert('Please select a donation type.', 'danger'); return; }
+
+      if (!document.getElementById('orphanageId').value) {
+        showLocalAlert('Please select an orphanage.', 'danger'); return;
+      }
+
+      if (type === 'money') {
+        const amt = parseFloat(document.getElementById('amount').value);
+        if (isNaN(amt) || amt <= 0) {
+          showLocalAlert('Please enter a valid amount greater than 0.', 'danger'); return;
+        }
+      }
+
+      if (type === 'items' && donationItems.length === 0) {
+        showLocalAlert('Please add at least one item by typing and pressing Enter.', 'danger'); return;
+      }
+
+      const btn = document.getElementById('donateBtn');
+      btn.textContent = 'Submitting...';
+      btn.disabled    = true;
+
+      // Build clean payload — always include both keys, set unused one to null
+      const payload = {
+        donor_name:    document.getElementById('donorName').value.trim(),
+        donor_email:   document.getElementById('donorEmail').value.trim(),
+        donor_phone:   document.getElementById('donorPhone').value.trim() || null,
+        orphanage_id:  document.getElementById('orphanageId').value,
+        donation_type: type,
+        message:       document.getElementById('message').value.trim() || null,
+        anonymous:     document.getElementById('anonymous').checked,
+        money_details: null,
+        item_details:  null,
+      };
+
+      if (type === 'money') {
+        payload.money_details = {
+          amount:         parseFloat(document.getElementById('amount').value),
+          payment_method: document.getElementById('paymentMethod').value,
+        };
+      } else {
+        const pickup = document.getElementById('pickupRequired').value === 'true';
+        payload.item_details = {
+          items:                [...donationItems],
+          quantity_description: document.getElementById('quantityDesc').value.trim() || null,
+          condition:            document.getElementById('condition').value,
+          pickup_required:      pickup,
+          pickup_address:       pickup
+            ? (document.getElementById('pickupAddress').value.trim() || null)
+            : null,
+        };
+      }
+
+      try {
+        await apiSubmitDonation(payload);
+        showLocalAlert('🎉 Donation submitted! Check your email for a thank-you message.', 'success');
+        document.getElementById('donationForm').reset();
+        donationItems = [];
+        renderTags();
+        document.getElementById('moneyGroup').style.display = 'none';
+        document.getElementById('itemsGroup').style.display = 'none';
+        if (isLoggedIn()) {
+          setTimeout(() => window.location.href = 'user-dashboard.html', 2000);
+        }
+      } catch(err) {
+        showLocalAlert('Error: ' + err.message, 'danger');
+      } finally {
+        btn.textContent = '💝 Complete Donation';
+        btn.disabled    = false;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
