@@ -5,7 +5,7 @@
 // ── Backend URL ────────────────────────────
 // Change this to your Render backend URL before deploying to Netlify
 // e.g. const API_BASE = 'https://kindconnect-backend.onrender.com';
-const API_BASE = window.KINDCONNECT_API_BASE || 'https://kindconnect-backend.onrender.com';
+const API_BASE = window.KINDCONNECT_API_BASE || 'https://orphanage-1meh.onrender.com';
 
 // ── Token helpers ──────────────────────────
 function getToken()  { return localStorage.getItem('kc_token'); }
